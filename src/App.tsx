@@ -1,5 +1,6 @@
-import React, {useState, useEffect, useRef, SetStateAction} from "react";
-import './todolist.css'
+import React, { useState, useEffect } from "react";
+import 'bootstrap/dist/css/bootstrap.min.css';
+import './todolist.css';
 
 interface Item {
   id: number;
@@ -9,7 +10,7 @@ interface Item {
   completed: boolean;
 }
 
-function App(){
+function App() {
   const [items, setItems] = useState<Item[]>([]);
   const [newItemName, setNewItemName] = useState('');
   const [newItemAmount, setNewItemAmount] = useState(Number);
@@ -17,9 +18,8 @@ function App(){
   const [error, setError] = useState('');
   const [allPurchased, setAllPurchased] = useState(false);
 
-
   const addItem = () => {
-    if(newItemName.trim() === '' || newItemAmount <= 0 || newItemUnit.trim() === ''){
+    if (newItemName.trim() === '' || newItemAmount <= 0 || newItemUnit.trim() === '') {
       setError("Minden mezőt kötelező kitölteni!");
       return;
     }
@@ -29,78 +29,85 @@ function App(){
       return;
     }
 
-      
     if (newItemName.length > 15) {
       setError("A termék neve legfeljebb 15 karakter lehet!");
       return;
     }
 
-    const newItem : Item = {id: Date.now(), name: newItemName, amount: newItemAmount, unit: newItemUnit, completed: false};
- 
+    const newItem: Item = { id: Date.now(), name: newItemName, amount: newItemAmount, unit: newItemUnit, completed: false };
 
-
-    setItems((prevItem) => [...prevItem, newItem]);
+    setItems((prevItems) => [...prevItems, newItem]);
     setNewItemName('');
     setNewItemAmount(Number);
     setNewItemUnit('');
     setError('');
-  }
-
-  const removeItem = (itemID : number) => {
-    setItems((prevItem) => 
-      prevItem.filter((item) => item.id !== itemID));
   };
 
+  const toggleItemCompletion = (id: number) => {
+    setItems((prevItems) =>
+      prevItems.map((item) =>
+        item.id === id ? { ...item, completed: !item.completed } : item
+      )
+    );
+  };
 
-  const toggleBought = (itemID: number) => {
-    setItems((prevItems) => 
-      prevItems.map((item) => 
-        item.id === itemID ? {...item, completed : !item.completed} : item)
-  )}
+  const deleteItem = (id: number) => {
+    setItems((prevItems) => prevItems.filter((item) => item.id !== id));
+  };
 
   useEffect(() => {
     setAllPurchased(items.length > 0 && items.every(item => item.completed));
   }, [items]);
 
+  const remainingItems = items.filter(item => !item.completed).length;
+
   return (
-  <>
-    <div>
-      <h2>Bevásárlólista</h2>
+    <div className="container mt-5">
+      <h2 className="text-center">Bevásárlólista</h2>
       <div>
-        <label htmlFor="">Terméknév: </label>
-        <input type="text" value={newItemName} onChange={(e) =>{ setNewItemName(e.target.value)}} name="" id="" />
-        <label htmlFor="">Mennyiség: </label>
-        <input type="text" value={newItemAmount} onChange={(e) =>{ setNewItemAmount(parseInt(e.target.value))}} name="" id="" />
-        <label htmlFor="">Mennyiség egység: </label>
-        <input type="text" value={newItemUnit} onChange={(e) =>{ setNewItemUnit(e.target.value)}} name="" id="" />
-        <button onClick={addItem}>Hozzáadás</button>
-      </div>
-      <div>
-      {allPurchased && <div className="success">Az összes termék megvásárlásra került!</div>}
-      </div>
-      <p style={{ color: "red" }}>{error}</p>
-      <ul>
+        <form className="">
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="itemName">Terméknév:</label>
+              <input type="text" className="form-control" id="itemName" value={newItemName} onChange={(e) => setNewItemName(e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label htmlFor="itemAmount">Mennyiség:</label>
+              <input type="number" className="form-control" id="itemAmount" value={newItemAmount} onChange={(e) => setNewItemAmount(parseInt(e.target.value))} />
+            </div>
+            <div className="form-group">
+              <label htmlFor="itemUnit">Mennyiség egység:</label>
+              <input type="text" className="form-control" id="itemUnit" value={newItemUnit} onChange={(e) => setNewItemUnit(e.target.value)} />
+            </div>
+          </div>
+          <button type="button" className="btn btn-primary mt-3" onClick={addItem}>Hozzáadás</button>
+        </form>
+        {allPurchased && <div className="alert alert-success">Az összes termék megvásárlásra került!</div>}
+        {error && <div className="alert alert-danger">{error}</div>}
+        <p className="text-success">Hátralévő termékek száma: {remainingItems}</p>
+        <ul className="list-group">
           {items.map((item) => {
-            const itemClass = `item ${item.completed ? "bought" : ""}`;
-            return(
-            <li key={item.id} className={itemClass}>
-              <span style={{opacity: item.completed? "0.2": "1"}}>
-              {item.name + " "+ item.amount + " " + item.unit}
-              
-              </span>
-              <button onClick={() => toggleBought(item.id)}>
-                {item.completed ? "Visszaállítás": "Megvásárolva"}
-              </button>
-              <button onClick={() => removeItem(item.id)}>Törlés</button>
-            </li>
+             const itemClass = `item ${item.completed ? "bought" : ""}`;
+            return (
+              <li key={item.id} className={itemClass}>
+                <span style={{opacity: item.completed? "0.2": "1"}}>
+                {item.name + " "+ item.amount + " " + item.unit}
+                </span>
+                  
+                    <button className="btn btn-sm btn-outline-secondary mr-2" onClick={() => toggleItemCompletion(item.id)}>
+                      {item.completed ? 'Visszavonás' : 'Megvásárolva'}
+                    </button>
+                    <button className="btn btn-sm btn-outline-danger" onClick={() => deleteItem(item.id)}>
+                      Törlés
+                    </button>
+                  
+              </li>
             );
           })}
-      </ul>
+        </ul>
+      </div>
     </div>
-    
-  </>
-  )
- 
+  );
 }
 
-export default App
+export default App;
